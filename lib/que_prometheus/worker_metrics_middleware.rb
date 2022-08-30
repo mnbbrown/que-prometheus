@@ -60,11 +60,11 @@ module QuePrometheus
     private
 
     def update_worker_guages
-      active_threads = Thread.list.select{ |t|
-        t.name == "que_worker" && !t.status.nil?
+      active_threads = Que.locker.workers.map(&:thread).reject{ |t|
+        t.status.nil?
       }
       ActiveWorkersCount.set(active_threads.count)
-      # ExpectedWorkersCount.set(workers.count)
+      ExpectedWorkersCount.set(Que.locker.workers.count)
     end
 
     def register(*metrics)
