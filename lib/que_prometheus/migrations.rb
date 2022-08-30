@@ -26,7 +26,7 @@ module QuePrometheus
               File.dirname(__FILE__),
               'migrations',
               step,
-              direction,
+              direction
             ].join('/') << '.sql'
             Que.execute(File.read(filename))
           end

@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 
 module QuePrometheus
   module JobMiddleware
@@ -5,7 +6,7 @@ module QuePrometheus
       labels = {
         job_class: job.que_attrs[:job_class],
         priority: job.que_attrs[:priority],
-        queue: job.que_attrs[:queue],
+        queue: job.que_attrs[:queue]
       }
 
       WorkerMetricsMiddleware::JobWorkedTotal.increment(
@@ -23,7 +24,7 @@ module QuePrometheus
       end
       WorkerMetricsMiddleware::JobWorkedSecondsTotal.increment(
         by: finished - started,
-        labels: labels,
+        labels: labels
       )
     end
   end

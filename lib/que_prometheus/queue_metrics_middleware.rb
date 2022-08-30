@@ -6,14 +6,14 @@ module QuePrometheus
   class QueueMetricsMiddleware
     Queued = Prometheus::Client::Gauge.new(
       :que_queue_queued,
-      docstring: "Number of jobs in the queue, by job_class/priority/due/failed",
-      labels: %i[queue job_class priority due failed],
+      docstring: 'Number of jobs in the queue, by job_class/priority/due/failed',
+      labels: %i[queue job_class priority due failed]
     )
 
     QueuedPastDue = Prometheus::Client::Gauge.new(
       :que_queue_queued_past_due_seconds,
-      docstring: "Max seconds past due, by job_class/priority/due/failed",
-      labels: %i[queue job_class priority due failed],
+      docstring: 'Max seconds past due, by job_class/priority/due/failed',
+      labels: %i[queue job_class priority due failed]
     )
 
     def initialize(app, options = {})
@@ -47,21 +47,21 @@ module QuePrometheus
 
       # Now we can safely update our gauges, touching only those that exist
       # in our queue
-      Que.execute("select * from que_jobs_summary").each do |labels|
+      Que.execute('select * from que_jobs_summary').each do |labels|
         metric_labels = {
-          queue: labels["queue"],
-          job_class: labels["job_class"],
-          priority: labels["priority"],
-          due: labels["due"],
-          failed: labels["failed"],
+          queue: labels['queue'],
+          job_class: labels['job_class'],
+          priority: labels['priority'],
+          due: labels['due'],
+          failed: labels['failed']
         }
         Queued.set(
-          labels["count"],
-          labels: metric_labels,
+          labels['count'],
+          labels: metric_labels
         )
         QueuedPastDue.set(
-          labels["max_seconds_past_due"],
-          labels: metric_labels,
+          labels['max_seconds_past_due'],
+          labels: metric_labels
         )
       end
 
@@ -75,15 +75,15 @@ module QuePrometheus
       Que.transaction do
         Que.execute("set local lock_timeout='100ms';")
         Que.execute("set local statement_timeout='5000ms';")
-        Que.execute("refresh materialized view que_jobs_summary;")
-        Que.execute("analyze que_jobs_summary;")
+        Que.execute('refresh materialized view que_jobs_summary;')
+        Que.execute('analyze que_jobs_summary;')
       end
     rescue StandardError => e
-      Loggy.logger.info(event: "refresh_materialized_view", error: e.to_s)
+      Loggy.logger.info(event: 'refresh_materialized_view', error: e.to_s)
     end
 
     def due_refresh?
-      since_analyze = Que.execute(<<~SQL.squish).first&.fetch("since_analyze")
+      since_analyze = Que.execute(<<~SQL.squish).first&.fetch('since_analyze')
         select case
           when last_analyze is not null then extract(epoch from now() - last_analyze)
           else null
