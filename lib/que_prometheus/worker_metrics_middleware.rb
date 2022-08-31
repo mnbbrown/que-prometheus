@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'prometheus/client'
+require "prometheus/client"
 
 module QuePrometheus
   class WorkerMetricsMiddleware
@@ -19,11 +19,11 @@ module QuePrometheus
       # ),
       ActiveWorkersCount = Prometheus::Client::Gauge.new(
         :que_worker_group_active_workers_count,
-        docstring: 'Number of active workers'
+        docstring: "Number of active workers",
       ),
       ExpectedWorkersCount = Prometheus::Client::Gauge.new(
         :que_worker_group_expected_workers_count,
-        docstring: 'Number of configured workers'
+        docstring: "Number of configured workers",
       ),
     ].freeze
 

@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
-require 'active_support/core_ext/module'
-require 'que_prometheus/job_middleware'
-require 'que_prometheus/worker_metrics_middleware'
-require 'que_prometheus/queue_metrics_middleware'
+require "active_support/core_ext/module"
+require "que_prometheus/job_middleware"
+require "que_prometheus/worker_metrics_middleware"
+require "que_prometheus/queue_metrics_middleware"
 
-require 'prometheus/middleware/exporter'
-require 'webrick'
-require 'rack'
-require 'que'
+require "prometheus/middleware/exporter"
+require "webrick"
+require "rack"
+require "que"
 
 module QuePrometheus
   class << self
@@ -18,10 +18,10 @@ module QuePrometheus
 
       # web server
       Thread.new do
-        health_check = ->(_) { [200, {}, ['healthy']] }
+        health_check = ->(_) { [200, {}, ["healthy"]] }
 
         app = Rack::URLMap.new(
-          '/' => Rack::Builder.new do
+          "/" => Rack::Builder.new do
             use WorkerMetricsMiddleware
             use Prometheus::Middleware::Exporter
 
@@ -37,14 +37,14 @@ module QuePrometheus
           end,
         )
 
-        port = ENV['METRICS_PORT'] || '8081'
+        port = ENV["METRICS_PORT"] || "8081"
 
         Rack::Handler::WEBrick.run(
           app,
-          Host: '0.0.0.0',
-          Port: port.to_i
-          # Logger: WEBrick::Log.new("/dev/null"),
-          # AccessLog: [],
+          Host: "0.0.0.0",
+          Port: port.to_i,
+          Logger: WEBrick::Log.new("/dev/null"),
+          AccessLog: [],
         )
       end
     end

@@ -24,14 +24,14 @@ module QuePrometheus
           steps.each do |step|
             filename = [
               File.dirname(__FILE__),
-              'migrations',
+              "migrations",
               step,
-              direction
-            ].join('/') << '.sql'
+              direction,
+            ].join("/") << ".sql"
             Que.execute(File.read(filename))
           end
 
-          set_db_version(version)
+          self.db_version = version
         end
       end
 
@@ -56,9 +56,11 @@ module QuePrometheus
         end
       end
 
-      def set_db_version(version)
+      def db_version=(version)
         i = version.to_i
-        Que.execute "COMMENT ON MATERIALIZED VIEW que_jobs_summary IS '#{i}'" unless i.zero?
+        if !i.zero?
+          Que.execute "COMMENT ON MATERIALIZED VIEW que_jobs_summary IS '#{i}'"
+        end
       end
     end
   end

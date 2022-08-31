@@ -1,19 +1,19 @@
 # frozen_string_literal: true
 
-require 'prometheus/client'
+require "prometheus/client"
 
 module QuePrometheus
   class QueueMetricsMiddleware
     Queued = Prometheus::Client::Gauge.new(
       :que_queue_queued,
-      docstring: 'Number of jobs in the queue, by job_class/priority/due/failed',
-      labels: %i[queue job_class priority due failed]
+      docstring: "Number of jobs in the queue, by job_class/priority/due/failed",
+      labels: %i[queue job_class priority due failed],
     )
 
     QueuedPastDue = Prometheus::Client::Gauge.new(
       :que_queue_queued_past_due_seconds,
-      docstring: 'Max seconds past due, by job_class/priority/due/failed',
-      labels: %i[queue job_class priority due failed]
+      docstring: "Max seconds past due, by job_class/priority/due/failed",
+      labels: %i[queue job_class priority due failed],
     )
 
     def initialize(app, options = {})
@@ -40,28 +40,30 @@ module QuePrometheus
     def call(env)
       # Reset all the previously observed values back to zero, ensuring we only ever
       # report metric values that are current in every scrape.
+      # rubocop:disable Style/HashEachMethods
       Queued.values.each { |labels, _| Queued.set(0.0, labels: labels) }
       QueuedPastDue.values.each { |labels, _| QueuedPastDue.set(0.0, labels: labels) }
+      # rubocop:enable Style/HashEachMethods
 
       refresh_materialized_view if due_refresh?
 
       # Now we can safely update our gauges, touching only those that exist
       # in our queue
-      Que.execute('select * from que_jobs_summary').each do |labels|
+      Que.execute("select * from que_jobs_summary").each do |labels|
         metric_labels = {
           queue: labels[:queue],
           job_class: labels[:job_class],
           priority: labels[:priority],
           due: labels[:due],
-          failed: labels[:failed]
+          failed: labels[:failed],
         }
         Queued.set(
           labels[:count],
-          labels: metric_labels
+          labels: metric_labels,
         )
         QueuedPastDue.set(
           labels[:max_seconds_past_due],
-          labels: metric_labels
+          labels: metric_labels,
         )
       end
 
@@ -75,11 +77,11 @@ module QuePrometheus
       Que.transaction do
         Que.execute("set local lock_timeout='100ms';")
         Que.execute("set local statement_timeout='5000ms';")
-        Que.execute('refresh materialized view que_jobs_summary;')
-        Que.execute('analyze que_jobs_summary;')
+        Que.execute("refresh materialized view que_jobs_summary;")
+        Que.execute("analyze que_jobs_summary;")
       end
     rescue StandardError => e
-      Loggy.logger.info(event: 'refresh_materialized_view', error: e.to_s)
+      Loggy.logger.info(event: "refresh_materialized_view", error: e.to_s)
     end
 
     def due_refresh?
