@@ -45,10 +45,10 @@ module QuePrometheus
           SQL
 
         if result.none?
-          # No table in the database at all.
+          # No view in the database at all.
           0
         elsif (d = result.first[:description]).nil?
-          # There's a table, it was just created before the migration system
+          # There's a view, it was just created before the migration system
           # existed.
           1
         else
@@ -58,7 +58,7 @@ module QuePrometheus
 
       def set_db_version(version)
         i = version.to_i
-        Que.execute "COMMENT ON TABLE que_jobs_summary IS '#{i}'" unless i.zero?
+        Que.execute "COMMENT ON MATERIALIZED VIEW que_jobs_summary IS '#{i}'" unless i.zero?
       end
     end
   end

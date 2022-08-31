@@ -1,8 +1,9 @@
 #### que-prometheus
 
-**Experimental and broken**
+**Experimental**
 
 `que-prometheus` is a "plugin" for `que-rb/que` to support collecting job, worker and queue level metrics and exposing them to a prometheus collector on `/metrics` and `/queue/metrics`.
+It's designed to support the same metrics that the `gocardless/que` fork produces.
 
 #### usage
 

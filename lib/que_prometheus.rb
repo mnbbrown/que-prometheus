@@ -13,22 +13,6 @@ require 'que'
 module QuePrometheus
   class << self
     def run
-      # metrics collector
-      # Thread.new do
-      #   Listener.subscribe do |event|
-      #     next if event["current_state"] != "nonexistent"
-
-      #     latency = Time.parse(event["time"]).to_i - Time.parse(event["run_at"]).to_i
-      #     labels = {
-      #       job_class: event["job_class"],
-      #       queue: event["queue"],
-      #       latency: latency,
-      #       priority: NOT_AVAILABLE,
-      #     }
-      #     # set metrics
-      #   end
-      # end
-
       # add job middleware
       Que.job_middleware.push JobMiddleware
 
@@ -42,15 +26,15 @@ module QuePrometheus
             use Prometheus::Middleware::Exporter
 
             run health_check
-          end
-          # "/queue" => Rack::Builder.new do
-          #   registry = Prometheus::Client::Registry.new
+          end,
+          "/queue" => Rack::Builder.new do
+            registry = Prometheus::Client::Registry.new
 
-          #   use QuePrometheus::QueueMetricsMiddleware, registry: registry
-          #   use Prometheus::Middleware::Exporter, registry: registry
+            use QuePrometheus::QueueMetricsMiddleware, registry: registry
+            use Prometheus::Middleware::Exporter, registry: registry
 
-          #   run health_check
-          # end,
+            run health_check
+          end,
         )
 
         port = ENV['METRICS_PORT'] || '8081'

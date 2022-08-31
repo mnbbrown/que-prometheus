@@ -40,8 +40,8 @@ module QuePrometheus
     def call(env)
       # Reset all the previously observed values back to zero, ensuring we only ever
       # report metric values that are current in every scrape.
-      Queued.each_value { |labels, _| Queued.set(0.0, labels: labels) }
-      QueuedPastDue.each_value { |labels, _| QueuedPastDue.set(0.0, labels: labels) }
+      Queued.values.each { |labels, _| Queued.set(0.0, labels: labels) }
+      QueuedPastDue.values.each { |labels, _| QueuedPastDue.set(0.0, labels: labels) }
 
       refresh_materialized_view if due_refresh?
 
@@ -49,18 +49,18 @@ module QuePrometheus
       # in our queue
       Que.execute('select * from que_jobs_summary').each do |labels|
         metric_labels = {
-          queue: labels['queue'],
-          job_class: labels['job_class'],
-          priority: labels['priority'],
-          due: labels['due'],
-          failed: labels['failed']
+          queue: labels[:queue],
+          job_class: labels[:job_class],
+          priority: labels[:priority],
+          due: labels[:due],
+          failed: labels[:failed]
         }
         Queued.set(
-          labels['count'],
+          labels[:count],
           labels: metric_labels
         )
         QueuedPastDue.set(
-          labels['max_seconds_past_due'],
+          labels[:max_seconds_past_due],
           labels: metric_labels
         )
       end
@@ -83,7 +83,7 @@ module QuePrometheus
     end
 
     def due_refresh?
-      since_analyze = Que.execute(<<~SQL.squish).first&.fetch('since_analyze')
+      since_analyze = Que.execute(<<~SQL.squish).first&.fetch(:since_analyze, nil)
         select case
           when last_analyze is not null then extract(epoch from now() - last_analyze)
           else null
